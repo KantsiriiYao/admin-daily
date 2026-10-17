@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>รายงานงานประจำวัน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f1ec; --card:#ffffff; --ink:#1c1b19; --muted:#6b675f; --line:#e4dfd6;
+    --accent:#1f4d3a; --accent-soft:#e3eee8; --ok:#1f7a4a; --ok-soft:#e2f3e9;
+    --no:#b3402e; --no-soft:#f8e5e1; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Thai',system-ui,sans-serif;font-size:16px;line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 120px}
+  header{margin-bottom:16px}
+  h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14px;font-weight:400}
+  .tabs{display:flex;gap:6px;background:#e9e4da;padding:4px;border-radius:12px;margin-bottom:16px}
+  .tab{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer}
+  .tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  input,select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .cat{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;text-align:left;color:var(--ink)}
+  .cat:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .cat .ic{font-size:20px}
+  .cat.wide{grid-column:1/-1;justify-content:center;background:var(--accent-soft);color:var(--accent);border-color:transparent}
+  .task{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
+  .task:first-child{border-top:0}
+  .num{font-weight:700;color:var(--muted);padding-top:10px;text-align:center}
+  .fields{display:grid;gap:6px}
+  .fields .two{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .fields select,.fields input{font-size:14px;padding:8px 10px}
+  .fields select.c{font-weight:600}
+  .st{display:flex;gap:4px;padding-top:2px}
+  .st button{border:1px solid var(--line);background:#fff;border-radius:10px;width:42px;height:42px;font-size:18px;cursor:pointer}
+  .st button.ok.on{background:var(--ok-soft);border-color:var(--ok)}
+  .st button.no.on{background:var(--no-soft);border-color:var(--no)}
+  .who{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:#faf7fd;overflow:hidden}
+  .who span{font-size:12px;font-weight:600;color:#5b3f86;padding:0 4px 0 10px;white-space:nowrap}
+  .who input{border:0;background:transparent;padding-left:6px}
+  .st em{display:none;font-style:normal;font-size:14px;font-weight:600;margin-left:6px}
+  .del{border:0;background:none;color:#a39e94;font-size:13px;cursor:pointer;padding:0;justify-self:start}
+  .btn{border:0;border-radius:11px;padding:12px 16px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.ghost{background:var(--accent-soft);color:var(--accent)}
+  .btn.primary{background:var(--accent);color:#fff;width:100%;font-size:17px;padding:14px}
+  .btn:disabled{opacity:.5;cursor:default}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .sticky{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:24px 16px 16px}
+  .sticky .in{max-width:760px;margin:0 auto}
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;transition:transform .25s;z-index:9;font-size:15px;max-width:90vw}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .warn{background:#fff6dd;border:1px solid #ecd58a;border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+  .empty{color:var(--muted);text-align:center;padding:24px 0}
+
+  /* summary */
+  .ranges{display:flex;gap:6px;flex-wrap:wrap}
+  .ranges button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--muted)}
+  .ranges button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .stat b{display:block;font-size:22px}
+  .stat span{font-size:12px;color:var(--muted)}
+  .ctitle{font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .legend{font-weight:400;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .lg{display:inline-block;width:10px;height:10px;border-radius:3px}
+  .lg.ok,.bar .ok{background:var(--ok)} .lg.no,.bar .no{background:var(--no)}
+  .chart{display:flex;align-items:flex-end;gap:6px;height:160px;overflow-x:auto;padding-bottom:22px}
+  .col{flex:1 0 26px;max-width:56px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
+  .bar{width:100%;display:flex;flex-direction:column-reverse;border-radius:6px 6px 2px 2px;overflow:hidden;min-height:2px}
+  .bar div{width:100%}
+  .col .n{font-size:11px;color:var(--muted);margin-bottom:2px}
+  .col .d{position:absolute;bottom:-20px;font-size:11px;color:var(--muted);white-space:nowrap}
+  .prow{display:grid;grid-template-columns:120px 1fr 80px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+  .prow:first-child{border-top:0}
+  .pbar{height:10px;background:var(--no-soft);border-radius:99px;overflow:hidden}
+  .pbar div{height:100%;background:var(--ok)}
+  .pnum{text-align:right;font-size:13px;color:var(--muted)}
+  .pnum b{color:var(--ink);font-size:15px}
+  .psub{font-size:12px;color:var(--muted)}
+  .hist-day{font-weight:700;margin:4px 0 6px;font-size:15px}
+  .hrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+  .hrow:first-of-type{border-top:0}
+  .badge{display:inline-block;font-size:12px;background:#efebe4;border-radius:6px;padding:1px 7px;color:var(--muted);margin:2px 4px 0 0;font-weight:500}
+  .badge.cat{background:var(--accent-soft);color:var(--accent)}
+  .badge.who{background:#eee7f6;color:#5b3f86}
+  .badge.pf{background:#fdeedd;color:#9a4b06}
+  .hnote{font-size:13px;color:var(--muted)}
+  .hbtns button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 8px;font:inherit;font-size:13px;cursor:pointer}
+  .stbtn{border:0;background:none;font-size:20px;cursor:pointer;padding:0}
+  .modal{position:fixed;inset:0;background:rgba(20,18,15,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:16px}
+  .modal[hidden]{display:none}
+  .sheet{background:var(--card);border-radius:18px;width:100%;max-width:520px;padding:20px;max-height:90vh;overflow:auto}
+  .sheet h2{margin:0 0 4px;font-size:19px}
+  .sheet pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:14px;background:#f7f5f0;border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;max-height:40vh;overflow:auto}
+  a.btn{text-decoration:none;box-sizing:border-box}
+  .btn.line{background:#06C755;color:#fff;width:100%;font-size:17px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .two-btn{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
+  .two-btn .btn{width:100%;font-size:16px;padding:14px 10px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .sheetlink{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;text-decoration:none;font-weight:600;font-size:14px;color:#0f6b3a;background:#e3f2e9;border:1px solid #bfe0cc;border-radius:10px;padding:8px 12px}
+  .sheetlink.full{display:flex;justify-content:center;margin-bottom:8px}
+  .btn.plain{background:#efebe4;color:var(--ink);flex:1}
+  .dayline{border:0;background:#06C755;color:#fff;border-radius:8px;padding:2px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-left:6px;vertical-align:middle}
+  @media (max-width:520px){
+    .row2{grid-template-columns:1fr} h1{font-size:20px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .prow{grid-template-columns:118px 1fr 70px}
+    .task{grid-template-columns:22px 1fr}
+    .task .st{grid-column:2;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .st button{width:auto;height:40px;display:flex;align-items:center;justify-content:center;font-size:16px}
+    .st em{display:inline}
+    .fields .two{grid-template-columns:1.15fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <header class="hd">
+    <div>
+      <h1>รายงานงานประจำวัน</h1>
+      <div class="sub">แอดมิน · Formko / The Apparel</div>
+    </div>
+    <a class="sheetlink" id="sheetLink" target="_blank" rel="noopener">📊 เปิดชีต</a>
+  </header>
+
+  <div class="warn" id="cfgWarn" hidden>เปิดหน้านี้จากลิงก์ Apps Script (/exec) เพื่อใช้งาน</div>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="add">กรอกงานวันนี้</button>
+    <button class="tab" data-tab="hist">สรุป & ย้อนหลัง</button>
+  </div>
+
+  <!-- ===== กรอกงาน ===== -->
+  <section id="tab-add">
+    <div class="card">
+      <div class="row2">
+        <div>
+          <label for="admin">ชื่อแอดมิน</label>
+          <select id="admin"></select>
+        </div>
+        <div>
+          <label for="date">วันที่</label>
+          <input type="date" id="date">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>เพิ่มงานตามหมวด (กดเพื่อเพิ่ม)</label>
+      <div class="cats" id="cats"></div>
+      <div class="actions">
+        <button class="btn ghost" id="pullPending">↩︎ ดึงงานค้าง ❌ จากวันก่อน</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="tasks"></div>
+      <div class="actions">
+        <button class="btn ghost" id="addTask">+ เพิ่มงานเปล่า</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== สรุป & ย้อนหลัง ===== -->
+  <section id="tab-hist" hidden>
+    <div class="card">
+      <div class="ranges" id="ranges">
+        <button data-r="today">วันนี้</button>
+        <button data-r="yesterday">เมื่อวาน</button>
+        <button data-r="7" class="on">7 วัน</button>
+        <button data-r="month">เดือนนี้</button>
+        <button data-r="lastmonth">เดือนก่อน</button>
+      </div>
+      <div class="row2" style="margin-top:12px">
+        <div>
+          <label for="hAdmin">แอดมิน</label>
+          <select id="hAdmin"></select>
+        </div>
+        <div>
+          <label for="hFrom">ช่วงวันที่</label>
+          <div style="display:flex;gap:6px">
+            <input type="date" id="hFrom">
+            <input type="date" id="hTo">
+          </div>
+        </div>
+        <div>
+          <label for="hCat">หมวดหมู่</label>
+          <select id="hCat"></select>
+        </div>
+        <div>
+          <label for="hWho">ผู้สั่งงาน</label>
+          <select id="hWho"><option value="">ทั้งหมด</option></select>
+        </div>
+      </div>
+      <div class="actions"><button class="btn ghost" id="hLoad">↻ โหลดข้อมูล</button></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="card" id="chartCard" hidden>
+      <div class="ctitle">งานรายวัน <span class="legend"><i class="lg ok"></i>เสร็จ <i class="lg no"></i>ไม่เสร็จ</span></div>
+      <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="card" id="catCard" hidden>
+      <div class="ctitle">สรุปตามหมวดหมู่</div>
+      <div id="byCat"></div>
+    </div>
+
+    <div class="card" id="whoCard" hidden>
+      <div class="ctitle">สรุปตามผู้สั่งงาน</div>
+      <div id="byWho"></div>
+    </div>
+
+    <div class="card" id="peopleCard" hidden>
+      <div class="ctitle">สรุปรายแอดมิน</div>
+      <div id="people"></div>
+    </div>
+
+    <div class="card" id="pendCard" hidden>
+      <div class="ctitle">งานที่ยังไม่เสร็จ ❌ <span class="sub" id="pendCount"></span></div>
+      <div id="pend"></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">ประวัติรายวัน</div>
+      <div id="hist"><div class="empty">กำลังโหลด…</div></div>
+    </div>
+  </section>
+</div>
+
+<div class="sticky" id="submitBar">
+  <div class="in two-btn"><button class="btn primary" id="submit">บันทึก</button><button class="btn line" id="submitLine"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.5s5.9-3.5 8-5.9C21.4 14.3 22 12.7 22 11c0-4.4-4.5-8-10-8z"/></svg>บันทึก + ส่งไลน์</button></div>
+</div>
+
+<datalist id="whoList"></datalist>
+
+<div class="modal" id="doneModal" hidden>
+  <div class="sheet">
+    <h2>บันทึกแล้ว ✅</h2>
+    <div class="sub" id="doneInfo"></div>
+    <pre id="lineText"></pre>
+    <a class="sheetlink full" id="sheetLink2" target="_blank" rel="noopener">📊 เปิดชีตตรวจสอบ</a>
+    <a class="btn line" id="shareLine" target="_blank" rel="noopener"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.5s5.9-3.5 8-5.9C21.4 14.3 22 12.7 22 11c0-4.4-4.5-8-10-8z"/></svg>ส่งไลน์</a>
+    <div class="actions">
+      <button class="btn plain" id="copyText">คัดลอกข้อความ</button>
+      <button class="btn plain" id="closeModal">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================= CONFIG ======================= */
+const CONFIG = {
+  // วางลิงก์ Web App ของ Apps Script (ลงท้ายด้วย /exec)
+  API_URL: 'https://script.google.com/macros/s/AKfycbyxqUSo3F58BxxaVhKT_RUlcfTxvqQXHaWyjmDZIxn_YXAmX1DuxzEH0DeHa-mSYt8_bw/exec',
+
+  // รายชื่อแอดมิน
+  ADMINS: ['Cream'],
+
+  // หมวดหมู่งาน — pf:true = ต้องเลือกแพลตฟอร์ม
+  CATEGORIES: [
+    { name: 'ตอบแชท',        icon: '💬', pf: true  },
+    { name: 'ปริ้นบาร์โค้ด',  icon: '🏷️', pf: false },
+    { name: 'ลงรูปสินค้า',    icon: '🖼️', pf: true  },
+    { name: 'ทำรูปใหม่',      icon: '🎨', pf: false },
+    { name: 'งานอื่น',        icon: '📦', pf: false },
+  ],
+
+  PLATFORMS: ['Shopee', 'Lazada', 'TikTok'],
+
+  // ลิงก์ชีตสำหรับตรวจสอบ (แนบท้ายข้อความ LINE + ปุ่มบนหน้าเว็บ)
+  SHEET_URL: 'https://docs.google.com/spreadsheets/d/1LeeCeUCZ_UxgahHxxHh82uhaBF9DDD3juZg-7XWQ7Q4/edit',
+
+  // ผู้สั่งงาน (พิมพ์ชื่ออื่นเองได้)
+  ASSIGNERS: ['งานประจำ', 'พี่ป๊อป', 'พี่บิว'],
+  DEFAULT_ASSIGNER: 'งานประจำ',
+};
+/* ====================================================== */
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} },
+};
+const ymd = d => { const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
+const today = () => ymd(new Date());
+const thDate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short',year:'2-digit'}); };
+const shortDate = s => { const [,m,d]=s.split('-').map(Number); return `${d}/${m}`; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const catOf = n => CONFIG.CATEGORIES.find(c => c.name === n) || CONFIG.CATEGORIES[CONFIG.CATEGORIES.length-1];
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); }
+
+['#sheetLink','#sheetLink2'].forEach(s => { if (CONFIG.SHEET_URL) $(s).href = CONFIG.SHEET_URL; else $(s).hidden = true; });
+// เปิดผ่าน Apps Script (/exec) → ใช้ google.script.run ไม่ต้องตั้ง API_URL
+const inGAS = !!(window.google && google.script && google.script.run);
+const configured = inGAS || (CONFIG.API_URL && !CONFIG.API_URL.includes('PASTE_'));
+if (!configured) $('#cfgWarn').hidden = false;
+
+const gas = (fn, arg) => new Promise((res, rej) =>
+  google.script.run.withSuccessHandler(res).withFailureHandler(e => rej(new Error(e && e.message || e)))[fn](arg));
+async function apiGet(params){
+  if (inGAS) return gas('apiGet', params);
+  const r = await fetch(CONFIG.API_URL + '?' + new URLSearchParams(params)); return r.json();
+}
+async function apiPost(body){
+  if (inGAS) return gas('apiPost', body);
+  const r = await fetch(CONFIG.API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+  return r.json();
+}
+
+/* ---------- setup ---------- */
+const opts = (arr, all) => (all ? '<option value="">ทั้งหมด</option>' : '') + arr.map(a => `<option>${esc(a)}</option>`).join('');
+$('#admin').innerHTML = opts(CONFIG.ADMINS);
+$('#hAdmin').innerHTML = opts(CONFIG.ADMINS, true);
+$('#hCat').innerHTML = opts(CONFIG.CATEGORIES.map(c=>c.name), true);
+$('#whoList').innerHTML = CONFIG.ASSIGNERS.map(a => `<option value="${esc(a)}">`).join('');
+const savedAdmin = store.get('admin');
+if (savedAdmin && CONFIG.ADMINS.includes(savedAdmin)) { $('#admin').value = savedAdmin; $('#hAdmin').value = savedAdmin; }
+$('#admin').onchange = e => store.set('admin', e.target.value);
+$('#date').value = today();
+
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+  $('#tab-add').hidden = b.dataset.tab !== 'add';
+  $('#tab-hist').hidden = b.dataset.tab !== 'hist';
+  $('#submitBar').hidden = b.dataset.tab !== 'add';
+  if (b.dataset.tab === 'hist') loadHist();
+});
+
+/* ---------- task rows ---------- */
+let tasks = [];
+const newTask = (o={}) => ({ category:'งานอื่น', platform:'', assigner:CONFIG.DEFAULT_ASSIGNER, detail:'', note:'', done:true, ...o });
+
+function render(){
+  const box = $('#tasks');
+  if (!tasks.length) { box.innerHTML = '<div class="empty">ยังไม่มีงาน — กดหมวดด้านบนเพื่อเพิ่ม</div>'; return; }
+  box.innerHTML = tasks.map((t,i) => {
+    const c = catOf(t.category);
+    return `<div class="task">
+      <div class="num">${i+1}</div>
+      <div class="fields">
+        <div class="two">
+          <select class="c" data-i="${i}" data-k="category">${CONFIG.CATEGORIES.map(x=>`<option value="${esc(x.name)}" ${x.name===t.category?'selected':''}>${x.icon} ${esc(x.name)}</option>`).join('')}</select>
+          ${c.pf
+            ? `<select data-i="${i}" data-k="platform"><option value="">— แพลตฟอร์ม —</option>${CONFIG.PLATFORMS.map(p=>`<option ${p===t.platform?'selected':''}>${p}</option>`).join('')}</select>`
+            : whoField(i,t)}
+        </div>
+        ${c.pf ? whoField(i,t) : ''}
+        <input data-i="${i}" data-k="detail" placeholder="${c.name==='งานอื่น'?'รายละเอียดงาน':'รายละเอียด (ไม่ใส่ก็ได้)'}" value="${esc(t.detail)}">
+        <input data-i="${i}" data-k="note" placeholder="หมายเหตุ เช่น รหัสสินค้า / เหตุผลที่ยังไม่เสร็จ" value="${esc(t.note)}">
+        <button class="del" data-del="${i}">ลบแถวนี้</button>
+      </div>
+      <div class="st">
+        <button class="ok ${t.done?'on':''}" data-st="${i}" data-v="1" title="เสร็จ">✅<em>เสร็จ</em></button>
+        <button class="no ${!t.done?'on':''}" data-st="${i}" data-v="0" title="ไม่เสร็จ">❌<em>ไม่เสร็จ</em></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function whoField(i,t){ return `<div class="who"><span>สั่งโดย</span><input list="whoList" data-i="${i}" data-k="assigner" placeholder="ใครสั่งงานนี้" value="${esc(t.assigner)}"></div>`; }
+function addTask(o){ tasks.push(newTask(o)); render(); saveDraft(); }
+
+$('#tasks').addEventListener('input', e => {
+  const i = e.target.dataset.i; if (i === undefined) return;
+  tasks[i][e.target.dataset.k] = e.target.value;
+  if (e.target.dataset.k === 'category') { if (!catOf(e.target.value).pf) tasks[i].platform=''; render(); }
+  saveDraft();
+});
+$('#tasks').addEventListener('click', e => {
+  const st = e.target.closest('[data-st]'), del = e.target.closest('[data-del]');
+  if (st){ tasks[st.dataset.st].done = st.dataset.v === '1'; render(); saveDraft(); }
+  if (del){ tasks.splice(+del.dataset.del,1); render(); saveDraft(); }
+});
+$('#addTask').onclick = () => addTask();
+
+$('#cats').innerHTML =
+  `<button class="cat wide" data-all="1"><span class="ic">💬</span>ตอบแชทครบ ${CONFIG.PLATFORMS.join(' · ')}</button>` +
+  CONFIG.CATEGORIES.map(c => `<button class="cat" data-c="${esc(c.name)}"><span class="ic">${c.icon}</span>${esc(c.name)}</button>`).join('');
+$('#cats').onclick = e => {
+  const b = e.target.closest('.cat'); if (!b) return;
+  if (b.dataset.all) { CONFIG.PLATFORMS.forEach(p => tasks.push(newTask({category:'ตอบแชท', platform:p}))); render(); saveDraft(); return; }
+  addTask({ category: b.dataset.c, assigner: b.dataset.c === 'งานอื่น' ? '' : CONFIG.DEFAULT_ASSIGNER });
+  if (b.dataset.c === 'งานอื่น') { const ins = $('#tasks').querySelectorAll('input[data-k="assigner"]'); ins[ins.length-1]?.focus(); }
+};
+
+function saveDraft(){ store.set('draft', JSON.stringify({date:$('#date').value, tasks})); }
+(() => { try{ const d=JSON.parse(store.get('draft')||'null'); if(d && d.date===today() && d.tasks?.length) tasks=d.tasks.map(newTask); }catch(e){} render(); })();
+
+/* ---------- ดึงงานค้าง ---------- */
+$('#pullPending').onclick = async () => {
+  if (!configured) return toast('ยังไม่ได้ตั้งค่า API_URL');
+  const btn = $('#pullPending'); btn.disabled = true;
+  try{
+    const res = await apiGet({action:'pending', admin:$('#admin').value, date:$('#date').value});
+    if (!res.ok) throw new Error(res.error);
+    if (!res.rows.length) toast('ไม่มีงานค้างจากวันก่อน 🎉');
+    else {
+      res.rows.forEach(r => tasks.push(newTask({
+        category:r.category, platform:r.platform, assigner:r.assigner,
+        detail: r.detail === r.category ? '' : r.detail,
+        note: `ค้างจาก ${shortDate(res.date)}${r.note ? ' · '+r.note : ''}`, done:false })));
+      render(); saveDraft(); toast(`ดึงงานค้าง ${res.rows.length} รายการ`);
+    }
+  }catch(err){ toast('ดึงข้อมูลไม่สำเร็จ: '+err.message); }
+  btn.disabled = false;
+};
+
+/* ---------- ส่งรายงาน ---------- */
+$('#submit').onclick = () => submitReport(false);
+$('#submitLine').onclick = () => submitReport(true);
+async function submitReport(toLine){
+  if (!configured) return toast('ยังไม่ได้ตั้งค่า API_URL');
+  if (!tasks.length) return toast('กรุณาเพิ่มงานอย่างน้อย 1 รายการ');
+  const i1 = tasks.findIndex(t => t.category==='งานอื่น' && !t.detail.trim());
+  if (i1 >= 0) return toast(`งานข้อ ${i1+1}: ใส่รายละเอียดงานด้วย`);
+  const i2 = tasks.findIndex(t => catOf(t.category).pf && !t.platform);
+  if (i2 >= 0) return toast(`งานข้อ ${i2+1}: เลือกแพลตฟอร์มด้วย`);
+  const i3 = tasks.findIndex(t => !t.assigner.trim());
+  if (i3 >= 0) return toast(`งานข้อ ${i3+1}: ใส่ว่าใครสั่งงานนี้`);
+
+  const btn = toLine ? $('#submitLine') : $('#submit'), label = btn.innerHTML;
+  $('#submit').disabled = $('#submitLine').disabled = true; btn.textContent = 'กำลังบันทึก…';
+  try{
+    const res = await apiPost({action:'add', admin:$('#admin').value, date:$('#date').value, tasks});
+    if (!res.ok) throw new Error(res.error);
+    const sent = tasks.map(t => ({...t, detail: t.detail || t.category}));
+    showDone($('#admin').value, $('#date').value, res.time || nowTime(), res.ts, sent);
+    tasks = []; render(); store.set('draft','');
+    if (toLine) openLine();
+  }catch(err){ toast('ส่งไม่สำเร็จ: '+err.message); }
+  $('#submit').disabled = $('#submitLine').disabled = false; btn.innerHTML = label;
+}
+
+/* ---------- สรุป & ย้อนหลัง ---------- */
+let allRows = [], histRows = [];
+function setRange(r){
+  const now = new Date(); let from = new Date(), to = new Date();
+  if (r==='yesterday') { from.setDate(from.getDate()-1); to = new Date(from); }
+  else if (r==='7') from.setDate(from.getDate()-6);
+  else if (r==='month') from = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (r==='lastmonth') { from = new Date(now.getFullYear(), now.getMonth()-1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
+  $('#hFrom').value = ymd(from); $('#hTo').value = ymd(to);
+  document.querySelectorAll('#ranges button').forEach(b => b.classList.toggle('on', b.dataset.r === r));
+}
+setRange('7');
+$('#ranges').onclick = e => { const b=e.target.closest('button'); if(!b) return; setRange(b.dataset.r); loadHist(); };
+['#hFrom','#hTo'].forEach(s => $(s).addEventListener('change', () => { document.querySelectorAll('#ranges button').forEach(b=>b.classList.remove('on')); loadHist(); }));
+$('#hAdmin').onchange = loadHist;
+$('#hCat').onchange = applyFilter;
+$('#hWho').onchange = applyFilter;
+$('#hLoad').onclick = loadHist;
+
+async function loadHist(){
+  if (!configured) { $('#hist').innerHTML = '<div class="empty">ยังไม่ได้ตั้งค่า API_URL</div>'; return; }
+  $('#hist').innerHTML = '<div class="empty">กำลังโหลด…</div>';
+  try{
+    const res = await apiGet({action:'summary', admin:$('#hAdmin').value, from:$('#hFrom').value, to:$('#hTo').value});
+    if (!res.ok) throw new Error(res.error);
+    allRows = res.rows;
+    const cur = $('#hWho').value;
+    const whos = [...new Set(allRows.map(r=>r.assigner||'—'))].sort();
+    $('#hWho').innerHTML = opts(whos, true); if (whos.includes(cur)) $('#hWho').value = cur;
+    applyFilter();
+  }catch(err){ $('#hist').innerHTML = `<div class="empty">โหลดไม่สำเร็จ: ${esc(err.message)}</div>`; }
+}
+function applyFilter(){
+  const c = $('#hCat').value, w = $('#hWho').value;
+  histRows = allRows.filter(r => (!c || r.category===c) && (!w || (r.assigner||'—')===w));
+  renderHist();
+}
+
+function groupBars(key, sortByConfig){
+  const g = {};
+  histRows.forEach(r => { const k = r[key] || '—'; const x = g[k] ||= {t:0, ok:0, pf:{}, days:new Set()}; x.t++; if (r.done) x.ok++; x.days.add(r.date); if (r.platform) x.pf[r.platform]=(x.pf[r.platform]||0)+1; });
+  let keys = Object.keys(g).sort((a,b)=>g[b].t-g[a].t);
+  if (sortByConfig) keys = CONFIG.CATEGORIES.map(c=>c.name).filter(k=>g[k]).concat(keys.filter(k=>!catOf(k) || !CONFIG.CATEGORIES.some(c=>c.name===k)));
+  return { g, keys };
+}
+function barRow(label, sub, x){
+  const p = Math.round(x.ok/x.t*100);
+  return `<div class="prow"><div><b>${label}</b>${sub?`<div class="psub">${sub}</div>`:''}</div>
+    <div class="pbar"><div style="width:${p}%"></div></div>
+    <div class="pnum"><b>${x.ok}</b>/${x.t} · ${p}%</div></div>`;
+}
+
+function renderHist(){
+  const total = histRows.length, done = histRows.filter(r=>r.done).length;
+  const days = new Set(histRows.map(r=>r.date)).size, pct = total ? Math.round(done/total*100) : 0;
+  $('#stats').innerHTML = `
+    <div class="stat"><b>${total}</b><span>งานทั้งหมด</span></div>
+    <div class="stat"><b style="color:var(--ok)">${done}</b><span>เสร็จ (${pct}%)</span></div>
+    <div class="stat"><b style="color:var(--no)">${total-done}</b><span>ยังไม่เสร็จ</span></div>
+    <div class="stat"><b>${days ? (total/days).toFixed(1) : 0}</b><span>งานเฉลี่ย/วัน (${days} วัน)</span></div>`;
+
+  // กราฟรายวัน
+  const byDay = {}; histRows.forEach(r => (byDay[r.date] ||= []).push(r));
+  const allDays = [];
+  for (let d = new Date($('#hFrom').value+'T12:00'); ymd(d) <= $('#hTo').value && allDays.length < 62; d.setDate(d.getDate()+1)) allDays.push(ymd(d));
+  const max = Math.max(1, ...allDays.map(d => (byDay[d]||[]).length));
+  $('#chartCard').hidden = allDays.length < 2;
+  $('#chart').innerHTML = allDays.map(d => {
+    const l = byDay[d]||[], ok = l.filter(r=>r.done).length, no = l.length-ok;
+    return `<div class="col" title="${thDate(d)} · เสร็จ ${ok} / ไม่เสร็จ ${no}"><div class="n">${l.length||''}</div>
+      <div class="bar" style="height:${l.length/max*100}%">${ok?`<div class="ok" style="flex:${ok}"></div>`:''}${no?`<div class="no" style="flex:${no}"></div>`:''}</div>
+      <div class="d">${shortDate(d)}</div></div>`;
+  }).join('');
+
+  // หมวดหมู่
+  const C = groupBars('category', true);
+  $('#catCard').hidden = !C.keys.length;
+  $('#byCat').innerHTML = C.keys.map(k => {
+    const x = C.g[k], pf = Object.entries(x.pf).map(([p,n])=>`${p} ${n}`).join(' · ');
+    return barRow(`${catOf(k).icon} ${esc(k)}`, esc(pf), x);
+  }).join('');
+
+  // ผู้สั่งงาน
+  const W = groupBars('assigner');
+  $('#whoCard').hidden = !W.keys.length;
+  $('#byWho').innerHTML = W.keys.map(k => barRow(esc(k), '', W.g[k])).join('');
+
+  // รายแอดมิน
+  const A = groupBars('admin');
+  $('#peopleCard').hidden = !A.keys.length;
+  $('#people').innerHTML = A.keys.map(k => barRow(esc(k), `${A.g[k].days.size} วันที่ส่ง`, A.g[k])).join('');
+
+  // งานค้าง
+  const pend = histRows.filter(r=>!r.done).sort((a,b)=>b.date.localeCompare(a.date));
+  $('#pendCard').hidden = !pend.length;
+  $('#pendCount').textContent = pend.length ? `${pend.length} รายการ` : '';
+  $('#pend').innerHTML = pend.map(r => rowHtml(r, true)).join('');
+
+  // ประวัติรายวัน
+  if (!total) { $('#hist').innerHTML = '<div class="empty">ไม่มีข้อมูลในช่วงนี้</div>'; return; }
+  $('#hist').innerHTML = Object.keys(byDay).sort().reverse().map(day => {
+    const l = byDay[day], ok = l.filter(r=>r.done).length;
+    return `<div style="margin-bottom:14px"><div class="hist-day">${thDate(day)} <span class="badge">✅ ${ok} · ❌ ${l.length-ok}</span><button class="dayline" data-day="${day}">ส่งไลน์</button></div>
+      ${l.map(r => rowHtml(r, false)).join('')}</div>`;
+  }).join('');
+}
+function rowHtml(r, showDate){
+  const title = r.detail && r.detail !== r.category ? r.detail : '';
+  return `<div class="hrow">
+    <button class="stbtn" data-tg="${r.id}" title="กดเพื่อสลับสถานะ">${r.done?'✅':'❌'}</button>
+    <div>
+      <div>${title ? esc(title) : `<b>${esc(r.category)}</b>`}</div>
+      <span class="badge cat">${catOf(r.category).icon} ${esc(r.category)}</span>${r.platform?`<span class="badge pf">${esc(r.platform)}</span>`:''}${r.assigner?`<span class="badge who">สั่งโดย ${esc(r.assigner)}</span>`:''}<span class="badge">${esc(r.admin)}</span>${r.time?`<span class="badge">🕒 ${esc(r.time)}</span>`:''}${showDate?`<span class="badge">${shortDate(r.date)}</span>`:''}
+      ${r.note?`<div class="hnote">${esc(r.note)}</div>`:''}
+    </div>
+    <div class="hbtns"><button data-rm="${r.id}">ลบ</button></div></div>`;
+}
+['#hist','#pend'].forEach(sel => $(sel).addEventListener('click', async e => {
+  const tg = e.target.closest('[data-tg]'), rm = e.target.closest('[data-rm]');
+  const id = tg?.dataset.tg || rm?.dataset.rm; if (!id) return;
+  if (rm && !confirm('ลบรายการนี้?')) return;
+  try{
+    const res = await apiPost({action: tg ? 'toggle' : 'delete', id});
+    if (!res.ok) throw new Error(res.error);
+    if (tg){ const r = allRows.find(x=>x.id===id); r.done = !r.done; }
+    else allRows = allRows.filter(x=>x.id!==id);
+    applyFilter();
+  }catch(err){ toast('ไม่สำเร็จ: '+err.message); }
+}));
+
+/* ---------- ส่งต่อใน LINE ---------- */
+const nowTime = () => new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+function buildLineText(admin, date, time, list){
+  const ok = list.filter(t=>t.done).length;
+  const L = [`📋 รายงานประจำวัน — ${admin}`, `📅 ${thDate(date)}${time ? ' · ส่งเมื่อ '+time+' น.' : ''}`, `✅ เสร็จ ${ok}  ❌ ไม่เสร็จ ${list.length-ok}`, ''];
+  CONFIG.CATEGORIES.forEach(c => {
+    const g = list.filter(t => t.category === c.name); if (!g.length) return;
+    L.push(`${c.icon} ${c.name}`);
+    g.forEach(t => {
+      const title = t.detail && t.detail !== t.category ? t.detail : (t.platform || c.name);
+      const extra = [t.detail && t.detail !== t.category && t.platform ? t.platform : '',
+                     t.assigner && t.assigner !== CONFIG.DEFAULT_ASSIGNER ? 'สั่งโดย '+t.assigner : ''].filter(Boolean).join(' · ');
+      L.push(`  ${t.done?'✅':'❌'} ${title}${extra?' ('+extra+')':''}${t.note?' — '+t.note:''}`);
+    });
+  });
+  const pend = list.filter(t=>!t.done);
+  if (pend.length) { L.push('', `⚠️ งานค้าง ${pend.length} รายการ`); }
+  if (CONFIG.SHEET_URL) L.push('', '🔗 ตรวจสอบในชีต:', CONFIG.SHEET_URL);
+  return L.join('\n');
+}
+let lastText = '';
+function showDone(admin, date, time, ts, list){
+  lastText = buildLineText(admin, date, time, list);
+  $('#doneInfo').textContent = `${list.length} รายการ · ${ts || thDate(date)+' '+time}`;
+  $('#lineText').textContent = lastText; $('#shareLine').href = lineUrl();
+  $('#doneModal').querySelector('h2').textContent = 'บันทึกแล้ว ✅';
+  $('#doneModal').hidden = false;
+}
+const lineUrl = () => 'https://line.me/R/share?text=' + encodeURIComponent(lastText);
+function openLine(){ if (!window.open(lineUrl(), '_blank')) toast('กดปุ่ม "ส่งไลน์" สีเขียวอีกครั้ง'); }
+$('#copyText').onclick = async () => {
+  try { await navigator.clipboard.writeText(lastText); toast('คัดลอกแล้ว — ไปวางในไลน์ได้เลย'); }
+  catch(e){ const r=document.createRange(); r.selectNodeContents($('#lineText')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast('กดค้างเพื่อคัดลอก'); }
+};
+$('#closeModal').onclick = () => $('#doneModal').hidden = true;
+$('#doneModal').onclick = e => { if (e.target.id === 'doneModal') $('#doneModal').hidden = true; };
+$('#hist').addEventListener('click', e => {
+  const b = e.target.closest('[data-day]'); if (!b) return;
+  const l = histRows.filter(r => r.date === b.dataset.day);
+  const admins = [...new Set(l.map(r=>r.admin))];
+  const parts = admins.map(a => { const g = l.filter(r=>r.admin===a); return buildLineText(a, b.dataset.day, g.map(r=>r.time).filter(Boolean).sort().pop()||'', g); });
+  const tail = CONFIG.SHEET_URL ? '\n\n🔗 ตรวจสอบในชีต:\n' + CONFIG.SHEET_URL : '';
+  lastText = parts.map(t => tail ? t.replace(tail, '') : t).join('\n\n────────\n\n') + tail;
+  $('#doneInfo').textContent = `${l.length} รายการ · ${thDate(b.dataset.day)}`;
+  $('#lineText').textContent = lastText; $('#shareLine').href = lineUrl();
+  $('#doneModal').querySelector('h2').textContent = 'ส่งรายงานย้อนหลัง';
+  $('#doneModal').hidden = false;
+});
+</script>
+</body>
+</html>
