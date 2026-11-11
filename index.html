@@ -266,16 +266,21 @@ const CONFIG = {
   // รายชื่อแอดมิน
   ADMINS: ['Cream'],
 
-  // หมวดหมู่งาน — pf:true = ต้องเลือกแพลตฟอร์ม
+  // หมวดหมู่งาน — opts = ตัวเลือกย่อยที่ต้องเลือก (label = ชื่อช่อง)
+  // ** 'งานอื่น' ต้องอยู่ท้ายสุดเสมอ **
   CATEGORIES: [
-    { name: 'ตอบแชท',        icon: '💬', pf: true  },
-    { name: 'ปริ้นบาร์โค้ด',  icon: '🏷️', pf: false },
-    { name: 'ลงรูปสินค้า',    icon: '🖼️', pf: true  },
-    { name: 'ทำรูปใหม่',      icon: '🎨', pf: false },
-    { name: 'งานอื่น',        icon: '📦', pf: false },
+    { name: 'ตอบแชท',           icon: '💬', label: 'แพลตฟอร์ม', opts: ['Shopee', 'Lazada', 'TikTok', 'Line OA', 'Facebook', 'Facebook จิปาถะ'] },
+    { name: 'ปริ้นบาร์โค้ด',     icon: '🏷️' },
+    { name: 'ลงรูปสินค้า',       icon: '🖼️', label: 'แพลตฟอร์ม', opts: ['Shopee', 'Lazada', 'TikTok'] },
+    { name: 'ทำรูปใหม่',         icon: '🎨' },
+    { name: 'Stock',            icon: '📦', label: 'งาน Stock',  opts: ['Big Seller', 'ปิดของหมด', 'เติมของ'] },
+    { name: 'โทรConfirmออเดอร์', icon: '📞', label: 'สินค้า',     opts: ['พัดลม', 'Kettlebell', 'แปรง'] },
+    { name: 'แจ้งเปลี่ยนสินค้า',  icon: '🔄' },
+    { name: 'สรุปยอดขายรายวัน',  icon: '📊' },
+    { name: 'ปักออเดอร์รอส่ง',    icon: '📌' },
+    { name: 'เปลี่ยนป้ายสินค้า',  icon: '🔖' },
+    { name: 'งานอื่น',           icon: '📝' },
   ],
-
-  PLATFORMS: ['Shopee', 'Lazada', 'TikTok'],
 
   // ลิงก์ชีตสำหรับตรวจสอบ (แนบท้ายข้อความ LINE + ปุ่มบนหน้าเว็บ)
   SHEET_URL: 'https://docs.google.com/spreadsheets/d/1LeeCeUCZ_UxgahHxxHh82uhaBF9DDD3juZg-7XWQ7Q4/edit',
@@ -297,6 +302,8 @@ const thDate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,
 const shortDate = s => { const [,m,d]=s.split('-').map(Number); return `${d}/${m}`; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const catOf = n => CONFIG.CATEGORIES.find(c => c.name === n) || CONFIG.CATEGORIES[CONFIG.CATEGORIES.length-1];
+CONFIG.CATEGORIES.forEach(c => { c.opts = c.opts || []; c.pf = c.opts.length > 0; c.label = c.label || 'ตัวเลือก'; });
+const CHAT_PFS = catOf('ตอบแชท').opts;
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); }
 
 ['#sheetLink','#sheetLink2'].forEach(s => { if (CONFIG.SHEET_URL) $(s).href = CONFIG.SHEET_URL; else $(s).hidden = true; });
@@ -351,7 +358,7 @@ function render(){
         <div class="two">
           <select class="c" data-i="${i}" data-k="category">${CONFIG.CATEGORIES.map(x=>`<option value="${esc(x.name)}" ${x.name===t.category?'selected':''}>${x.icon} ${esc(x.name)}</option>`).join('')}</select>
           ${c.pf
-            ? `<select data-i="${i}" data-k="platform"><option value="">— แพลตฟอร์ม —</option>${CONFIG.PLATFORMS.map(p=>`<option ${p===t.platform?'selected':''}>${p}</option>`).join('')}</select>`
+            ? `<select data-i="${i}" data-k="platform"><option value="">— ${esc(c.label)} —</option>${c.opts.map(p=>`<option ${p===t.platform?'selected':''}>${p}</option>`).join('')}</select>`
             : whoField(i,t)}
         </div>
         ${c.pf ? whoField(i,t) : ''}
@@ -372,7 +379,7 @@ function addTask(o){ tasks.push(newTask(o)); render(); saveDraft(); }
 $('#tasks').addEventListener('input', e => {
   const i = e.target.dataset.i; if (i === undefined) return;
   tasks[i][e.target.dataset.k] = e.target.value;
-  if (e.target.dataset.k === 'category') { if (!catOf(e.target.value).pf) tasks[i].platform=''; render(); }
+  if (e.target.dataset.k === 'category') { if (!catOf(e.target.value).opts.includes(tasks[i].platform)) tasks[i].platform=''; render(); }
   saveDraft();
 });
 $('#tasks').addEventListener('click', e => {
@@ -383,11 +390,11 @@ $('#tasks').addEventListener('click', e => {
 $('#addTask').onclick = () => addTask();
 
 $('#cats').innerHTML =
-  `<button class="cat wide" data-all="1"><span class="ic">💬</span>ตอบแชทครบ ${CONFIG.PLATFORMS.join(' · ')}</button>` +
+  `<button class="cat wide" data-all="1"><span class="ic">💬</span>ตอบแชทครบ ${CHAT_PFS.join(' · ')}</button>` +
   CONFIG.CATEGORIES.map(c => `<button class="cat" data-c="${esc(c.name)}"><span class="ic">${c.icon}</span>${esc(c.name)}</button>`).join('');
 $('#cats').onclick = e => {
   const b = e.target.closest('.cat'); if (!b) return;
-  if (b.dataset.all) { CONFIG.PLATFORMS.forEach(p => tasks.push(newTask({category:'ตอบแชท', platform:p}))); render(); saveDraft(); return; }
+  if (b.dataset.all) { CHAT_PFS.forEach(p => tasks.push(newTask({category:'ตอบแชท', platform:p}))); render(); saveDraft(); return; }
   addTask({ category: b.dataset.c, assigner: b.dataset.c === 'งานอื่น' ? '' : CONFIG.DEFAULT_ASSIGNER });
   if (b.dataset.c === 'งานอื่น') { const ins = $('#tasks').querySelectorAll('input[data-k="assigner"]'); ins[ins.length-1]?.focus(); }
 };
@@ -423,7 +430,7 @@ async function submitReport(toLine){
   const i1 = tasks.findIndex(t => t.category==='งานอื่น' && !t.detail.trim());
   if (i1 >= 0) return toast(`งานข้อ ${i1+1}: ใส่รายละเอียดงานด้วย`);
   const i2 = tasks.findIndex(t => catOf(t.category).pf && !t.platform);
-  if (i2 >= 0) return toast(`งานข้อ ${i2+1}: เลือกแพลตฟอร์มด้วย`);
+  if (i2 >= 0) return toast(`งานข้อ ${i2+1}: เลือก${catOf(tasks[i2].category).label}ด้วย`);
   const i3 = tasks.findIndex(t => !t.assigner.trim());
   if (i3 >= 0) return toast(`งานข้อ ${i3+1}: ใส่ว่าใครสั่งงานนี้`);
 
